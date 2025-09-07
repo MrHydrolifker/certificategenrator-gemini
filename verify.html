@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Certificate</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 20px; background: #f4f4f4; }
+    input, button { padding: 8px; font-size: 16px; }
+    .result { font-size: 18px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Verify Certificate</h2>
+  <input type="text" id="uidInput" placeholder="Enter UID">
+  <button onclick="verifyUID()">Verify</button>
+  <div id="result" class="result"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEbtl7FPp8qaR8nd75QOIlJ6DTlpOC5aI",
+      authDomain: "consistencytracker-b200b.firebaseapp.com",
+      databaseURL: "https://consistencytracker-b200b-default-rtdb.firebaseio.com",
+      projectId: "consistencytracker-b200b",
+      storageBucket: "consistencytracker-b200b.firebasestorage.app",
+      messagingSenderId: "861939154997",
+      appId: "1:861939154997:web:b67c51a52882b6db27317c",
+      measurementId: "G-62SMMF5WCD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Auto-fill UID from URL
+    const params = new URLSearchParams(window.location.search);
+    const uidFromLink = params.get('uid');
+    if(uidFromLink) document.getElementById('uidInput').value = uidFromLink;
+
+    // Attach verifyUID to the global window object
+    window.verifyUID = async function() {
+      const uid = document.getElementById("uidInput").value.trim();
+      if (!uid) return alert("Please enter a UID");
+
+      try {
+        const docRef = doc(db, "certificates", uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById("result").innerText = `✅ Certificate Verified! Name: ${data.name}`;
+          document.getElementById("result").style.color = "green";
+        } else {
+          document.getElementById("result").innerText = "❌ Invalid UID!";
+          document.getElementById("result").style.color = "red";
+        }
+      } catch (error) {
+        console.error("Error fetching document:", error);
+        document.getElementById("result").innerText = "❌ Error verifying certificate";
+        document.getElementById("result").style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>
